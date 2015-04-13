@@ -47,12 +47,13 @@ tty.socket;
 tty.windows;
 tty.terms;
 tty.elements;
+tty.userdata;
 
 /**
  * Open
  */
 
-tty.open = function() {
+tty.open = function(userdata) {
   if (document.location.pathname) {
     var parts = document.location.pathname.split('/')
       , base = parts.slice(0, parts.length - 1).join('/') + '/'
@@ -63,6 +64,7 @@ tty.open = function() {
     tty.socket = io.connect();
   }
 
+  tty.userdata = userdata;
   tty.windows = [];
   tty.terms = {};
 
@@ -589,7 +591,7 @@ function Tab(win, socket) {
 
   win.tabs.push(this);
 
-  this.socket.emit('create', cols, rows, function(err, data) {
+  this.socket.emit('create', cols, rows, tty.userdata, function(err, data) {
     if (err) return self._destroy();
     self.pty = data.pty;
     self.id = data.id;
@@ -890,18 +892,18 @@ function sanitize(text) {
  * Load
  */
 
-function load() {
+function load(userdata) {
   if (load.done) return;
   load.done = true;
 
   off(document, 'load', load);
   off(document, 'DOMContentLoaded', load);
-  tty.open();
+  tty.open(userdata);
 }
 
-on(document, 'load', load);
-on(document, 'DOMContentLoaded', load);
-setTimeout(load, 200);
+//on(document, 'load', load);
+//on(document, 'DOMContentLoaded', load);
+//setTimeout(load, 200);
 
 /**
  * Expose
@@ -910,6 +912,7 @@ setTimeout(load, 200);
 tty.Window = Window;
 tty.Tab = Tab;
 tty.Terminal = Terminal;
+tty.load = load;
 
 this.tty = tty;
 
